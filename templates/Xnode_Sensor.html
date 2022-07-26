@@ -1,0 +1,58 @@
+<!DOCTYPE html>     <!-- This is used to declare this is a HTML5 file--> 
+
+<html lang="en">
+    <head>
+        <!-- Define meta elements: contents for explorer engine, and some http-equiv attributes-->
+        <meta charset="utf-8">                                      <!-- content-Type -->
+        <meta name = "Testbed-NTU", content = "Database, monitoring, real-time, Xnode-sensor">       
+        <meta http-equiv="X-UA-Compatible" content="chrome=1" />    <!-- X-UA-Compatible render for chrome-->
+        <meta http-equiv="x-ua-compatible" content="ie=edge">       <!-- X-UA-Compatible render for edge -->
+        <link rel="stylesheet" type="text/css" href="../static/Web_application.css" />
+        <title> Testbed - NTU | Welcome </title>
+    </head>
+
+    <body>
+        <div class="navigation-bar">
+
+            <h1 style="color: #e8da84;; font-size:80px; display: inline; position: relative; bottom: -10px;
+                padding-left: 20px;"> Smart Sensor Testbed  </h1> 
+            <ul>
+                <li style="padding-left: 750px;"><a href= "{{ url_for('home') }}">Home</a>    </li>
+                <li><a href= "{{ url_for('about')}}">About</a>    </li>
+                <li><a href= "{{ url_for('system')}}">System</a>  </li>
+                <li><a href= "{{ url_for('login')}}">Login</a>    </li>
+            </ul>
+        </div>        
+        <div class="system-model"> 
+            <img src="{{ url_for('static', filename='Testbed-Model.png') }}" style="width: 350px;height: 480px; 
+                    position: relative; left: 30px; top: 10px;">
+            <div class="sensor-data">
+                <a href="{{ url_for('Sensor_Info', sensor_type = 'Xnode_Sensor')}}" ><b>Xnode Sensor</b></a>
+                <a href="{{ url_for('Sensor_Info', sensor_type = 'FBG_Sensor')}}" > <b> FBG Sensor </b></a>
+                <a href="{{ url_for('Monitor_Data')}}" > <b> Monitor_Data </b></a>
+                <!-- The table show the general info of sensor node-->
+                <table>
+                    <tr style="font-weight: bold; font-family:'Times New Roman', Times, serif">
+                        <th> Sensor ID</th> 
+                        <th> Status </th> 
+                        <th> Location </th>
+                    </tr>
+                    {% for infoi in Info %}
+                    <tr>                       
+                        <td> {{ infoi[0] }} </td>
+                        <td> {{ infoi[1] }} </td>
+                        <td> {{ infoi[2] }} </td>                       
+                    </tr>
+                    {% endfor %}
+
+
+                </table>
+
+            
+
+            </div>
+
+        </div>
+                
+    </body>
+</html>
