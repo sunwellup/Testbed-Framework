@@ -1,0 +1,106 @@
+.navigation-bar {
+    height: 150px;
+    width: 1350px;
+    background-color: #181c62;
+
+}
+
+.navigation-bar ul li{
+    list-style: none;
+    display:inline;
+}
+
+.navigation-bar ul li a{
+    text-decoration: none;
+    background-color: black;
+    color: #f4f4f4;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 26px;
+    padding: 5px;
+    font-weight: bold;
+}
+
+.navigation-bar ul li a:hover{
+    text-decoration: none;
+    display:inline;
+    color: black;
+    background-color: #f4f4f4;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+/* ============================================================= */
+.system{
+    position: relative;
+    top: 5px;
+    border: #181c62 3px solid;
+    width: 260px;
+    height:460px
+    
+    }
+
+.sensor-data{
+    border: #181c62 3px solid;
+    width: 1060px;
+    height: 460px;
+    position: relative;
+    bottom: 460px;
+    left: 280px;
+}
+
+
+    /* ============================================================= */
+.push_button {
+    border: none;
+    font-family:'Times New Roman', Times, serif;
+    background: #30302f;
+    color: #f5f5f5;
+    cursor: pointer;
+    padding: 7px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    outline: none;
+    position: relative;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    transition: all 0.3s;
+    }
+
+.push_button:after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    transition: all 0.3s;
+    }
+
+.push_button:before {
+        font-family: 'FontAwesome';
+        speak: none;
+        font-style: normal;
+        font-weight: bold;
+        font-variant: normal;
+        text-transform: none;
+        line-height: 1;
+        position: relative;
+        -webkit-font-smoothing: antialiased;
+    }
+
+.push_button:hover {
+        background: #30302f;
+        }
+
+.push_button:active {
+        background: #30302f;
+        top: 2px;
+        }
+    
+.push_button:before {
+        position: absolute;
+        height: 100%;
+        left: 0;
+        top: 0;
+        line-height: 3;
+        }
