@@ -1,3 +1,4 @@
+from unicodedata import name
 from dateutil import tz
 from matplotlib.pyplot import figure, margins
 import pytz
@@ -5,6 +6,7 @@ import datetime
 from datetime import date
 import plotly.graph_objs as go
 import plotly
+import plotly.express as plex
 from dash import dcc, html, dash_table, ctx
 from dash.dependencies import Input, Output, State
 import dash
@@ -21,14 +23,19 @@ import pymysql as mysql
 import pandas as pd
 import urllib3
 urllib3.disable_warnings()
+
 # ==================================== MySQL Start ============================================
+
 # Create the class of sensor node
 
 
 class CreateSensorDB(object):
-    def __init__(self, _host="localhost", _user="root", _password='shenwei66719126', _DBname='TestBed'):
+    # def __init__(self, _host="localhost", _user="root", _password='shenwei66719126', _DBname='TestBed'):
+    def __init__(self, _host="ntutestbed.cidlvgyuihjt.ap-southeast-1.rds.amazonaws.com",
+                    _user = 'admin', _password = 'ntutestbed2022', _DBname = 'testbed'):
         self.database = mysql.connect(
             host=_host, user=_user, password=_password, database=_DBname)
+
         self.cursor = self.database.cursor()
 
     def GetTableName(self):
@@ -55,11 +62,10 @@ class CreateSensorDB(object):
         return Table_name
 
     def InsertData(self, TableName: str, FieldKey: tuple, Data):
-        '''
-        param: SensorID --> primary key to identify each sensor
-        param: FieldKey --> the name of coluoms to add 'Data'
-        param: Data     --> general info of sensor with field key
-        '''
+        # param: SensorID --> primary key to identify each sensor
+        # param: FieldKey --> the name of coluoms to add 'Data'
+        # param: Data     --> general info of sensor with field key
+
         # Find the number of FieldKey
         Len_FieldKey = len(FieldKey); placeholder_list = ['%s'] * Len_FieldKey
         placeholders = tuple(placeholder_list)
@@ -69,9 +75,9 @@ class CreateSensorDB(object):
         self.database.commit(); print("Data have been inserted")
 
     def UpdateData(self, TableName: str, SensorID: int, FieldKey: str, Data):
-        '''
-        param: SensorID: a int to identify the sensorID to be updated
-        '''
+
+        # param: SensorID: a int to identify the sensorID to be updated
+
         update_sql = "UPDATE " + TableName + "SET " + FieldKey + "=" + str(Data) +\
                         "WHERE SensorID = " + str(SensorID)
         self.cursor.execute(update_sql); self.database.commit()
@@ -140,8 +146,6 @@ sensorDB.InsertData(TableName='FBG_Sensor',
 
 # ====================================== MySQL end ============================================
 
-
-
 # ====================================== Influx start =========================================
 class CreateSensorInflux(object):
     def __init__(self, _url="https://ap-southeast-2-1.aws.cloud2.influxdata.com",
@@ -152,19 +156,27 @@ class CreateSensorInflux(object):
         self.write = self.influxDB.write_api();
         self.query = self.influxDB.query_api()
 
-    def QueryData(self, _bucket: str, _starttime: str, _measurement: str, _fieldkey: str,
-                    _stoptime='now()', data_index='_time', _org="ntusyswell@gmail.com"):
+    def QueryData(self, _bucket: str, _starttime: str, _measurement: str, _fieldkey: str, _sensorid: str,
+                    _direction:str,_stoptime='now()', data_index='_time', _org="ntusyswell@gmail.com"):
         '''
         Param: _bucket --> the name of the bucket
         Param: _starttime --> the time to be requested from
         Param: _stoptime --> the time to be requested to
         '''
-        FLUX_query = 'from(bucket:{bucket}) \
+        if _direction:
+            FLUX_query = 'from(bucket:{bucket}) \
                 |> range(start: {starttime}, stop: {stoptime}) \
-                |> filter(fn: (r) => r._measurement == {measurement}) \
+                |> filter(fn: (r) => r._measurement == {measurement} and r.sensor_id == {sensorid} and r.direction == {direction}) \
                 |> filter(fn: (r) => r._field == {fieldkey})'.format(bucket=_bucket, starttime=_starttime,
                                                                 stoptime=_stoptime, measurement=_measurement,
-                                                                fieldkey=_fieldkey)
+                                                                sensorid = _sensorid, fieldkey=_fieldkey)
+        else:
+            FLUX_query = 'from(bucket:{bucket}) \
+                |> range(start: {starttime}, stop: {stoptime}) \
+                |> filter(fn: (r) => r._measurement == {measurement} and r.sensor_id == {sensorid}) \
+                |> filter(fn: (r) => r._field == {fieldkey})'.format(bucket=_bucket, starttime=_starttime,
+                                                                stoptime=_stoptime, measurement=_measurement,
+                                                                sensorid = _sensorid, fieldkey=_fieldkey)
 
         data = self.query.query_data_frame(
             query=FLUX_query, data_frame_index=[data_index], org=_org)
@@ -224,12 +236,12 @@ dashsystem_layout = '''
     <body>
         <div class="navigation-bar">
             <img src="../static/ntu-placeholder-d.png" style="width: 300px; height: auto;
-            position: relative; top: 20px; right: 980px;">
+            position: relative; top: 20px; right: 720px;">
 
             <h1 style="color: #f4f4f4; font-size: 46px; position: relative; left:340px; bottom: 0px;
                 margin: 0px;padding: 0px;float: left;"> 
-                    Digital Construction and Intelligent Infrastructure </h1>
-            <h3 style="width:700px; position: relative; bottom: 73px; left:340px;color: #d71440; font-size: 27px;">
+                    NTU Testbed for Digital Construction </h1>
+            <h3 style="width:700px; position: relative; bottom: 77px; left:340px;color: #d71440; font-size: 27px;">
                 <i>Making built environment sustainable & resilient</i></h3>
         
             <ul style="position: relative; bottom: 50px">
@@ -296,10 +308,12 @@ custom_calendar = {
 }
 
 Floor_option = ['Floor-1', 'Floor-2', 'Floor-3']
-Sensor_option = ['Xnode Sensor', 'FBG Sensor', 'Both types']
+Sensor_option = ['Xnode Sensor', 'FBG Sensor']
 ID_option = {'Floor-1': {'Xnode Sensor': ['Xnode1', 'Xnode2', 'Xnode3'], 'FBG Sensor': ['FBG1']},
                 'Floor-2': {'Xnode Sensor': ['Xnode4', 'Xnode5', 'Xnode6'], 'FBG Sensor': ['FBG2']},
                 'Floor-3': {'Xnode Sensor': ['Xnode7', 'Xnode8', 'Xnode9'], 'FBG Sensor': ['FBG3']}};
+Direction_Option = ['All-Axes', 'X-Axis','Y-Axis', 'Z-Axis']
+
 
 appdash_system.layout = html.Div([
     dcc.Tabs(id='tabs-system-data', children=[
@@ -308,30 +322,35 @@ appdash_system.layout = html.Div([
                 children=[
                     html.Div(id='floor', children=[
                             dcc.Dropdown(id='No-Floor', options=Floor_option)
-                        ], style={'width': '200px', 'display': 'inline-block',
+                        ], style={'width': '150px', 'display': 'inline-block',
                                 'position': 'relative', 'top': '10px', 'left': '20px'}),
 
                     html.Div(id='sensor', children=[
                             dcc.Dropdown(id='Sensor-Type', options=Sensor_option)
-                        ], style={'width': '200px', 'display': 'inline-block',
+                        ], style={'width': '180px', 'display': 'inline-block',
                                 'position': 'relative', 'top': '10px', 'left': '40px'}),
 
                     html.Div(id='id', children=[
                             dcc.Dropdown(id='Sensor-ID')
-                        ], style={'width': '200px', 'display': 'inline-block',
+                        ], style={'width': '150px', 'display': 'inline-block',
                                 'position': 'relative', 'top': '10px', 'left': '60px'}),
+
+                    html.Div(id='direction', children=[
+                            dcc.Dropdown(id='Direction')
+                        ], style={'width': '150px', 'display': 'inline-block',
+                                'position': 'relative', 'top': '10px', 'left': '80px'}),
 
                         html.Div(html.Button(id='submit-button-realtime', n_clicks=0, children='Submit',
                                         className='push_button',
                                         style={'cursor': 'pointer', 'font-size': '20px', 'border-radius': '5px',
                                             'font-weight': 'bold', 'color': '#f5f5f5', 'background-color': '#30302f',
-                                            'margin-left':'10px'}), style={'position':'absolute','left':'700px','bottom':'366px'}),
+                                            'margin-left':'10px'}), style={'position':'absolute','left':'750px','bottom':'366px'}),
 
                         html.Div(html.Button(id='realtime-clear', n_clicks=0, children='Clear',
                                         className='push_button',
                                         style={'cursor': 'pointer', 'font-size': '20px', 'border-radius': '5px',
                                             'font-weight': 'bold', 'color': '#f5f5f5', 'background-color': '#30302f'}),
-                                            style={'position':'absolute','left':'830px','bottom':'366px'}),
+                                            style={'position':'absolute','left':'880px','bottom':'366px'}),
 
                     html.Div(id='static-info'),
                     html.Div(id = 'realtime-div', children = dcc.Graph(id='realtime-graph')),
@@ -410,19 +429,19 @@ appdash_system.layout = html.Div([
 @appdash_system.callback(Output(component_id='Sensor-ID', component_property='options'),
                             Output(component_id='Sensor-ID',component_property='disabled'),
                             Output(component_id='Sensor-ID',component_property='style'),
+                            Output(component_id='Direction', component_property='options'),
+                            Output(component_id='Direction',component_property='disabled'),
+                            Output(component_id='Direction',component_property='style'),
                             Input(component_id='No-Floor',component_property='value'),
                             Input(component_id='Sensor-Type', component_property='value'))
+
 def sensor_ID(floor, sensor_type):
     if floor is None or sensor_type is None:
-        return [], True, {'cursor': 'no-drop'}
-    elif sensor_type == 'Both types':
-        which_floor = ID_option[floor]
-        id_opt = which_floor['Xnode Sensor'] + which_floor['FBG Sensor']
-        return id_opt, False, {}
+        return [], True, {'cursor': 'no-drop'}, [], True, {'cursor': 'no-drop'}
     else:
         which_floor = ID_option[floor]
         id_opt = which_floor[sensor_type]
-        return id_opt, False, {}
+        return id_opt, False, {}, Direction_Option , False, {}
 
 
 @appdash_system.callback(Output(component_id='static-info', component_property='children'),
@@ -501,36 +520,78 @@ def Sensor_Info(floor, sensor_type, sensor_id, submit_clicks, clear_click):
     elif button_clicked == 'realtime-clear':
         return []
 
+sensorid_dic = {'Xnode1':'"sensor1"', 'Xnode2':'"sensor2"'};
+direction_dic = {'X-Axis': 'x', 'Y-Axis':'y', 'Z-Axis':'z'};
 
-
+# Give an output for the X, Y and Z accelermeter sensor only or all the three directions
 @appdash_system.callback(Output(component_id='realtime-graph', component_property='figure'),
                             Output(component_id='realtime-div', component_property='style'),
                             State(component_id='No-Floor', component_property='value'),
                             State(component_id='Sensor-Type', component_property='value'),
                             State(component_id='Sensor-ID', component_property='value'),
+                            State(component_id='Direction', component_property='value'),
+
                             Input(component_id='graph-update', component_property='n_intervals'),
                             Input(component_id='submit-button-realtime', component_property='n_clicks'),
                             Input(component_id='static-info', component_property='children'))
-def realtime_graph(floor, sensor_type, sensor_id, n_intervals,n_click, static_info):
+def realtime_graph(floor, sensor_type, sensor_id, direction, n_intervals,n_click, static_info):
     if static_info:
         # ================= Fetch the data from the influxDB ==========================
         fig = plotly.graph_objs.Figure();
-        data_frame = clientInflux.QueryData(_bucket= '"testbed"', _starttime = '-60s', _measurement='"my_measurement1"',
-                                            _fieldkey = '"temperature1"')
-        data_temp = data_frame['_value']
-        data_timeUTC = data_frame.index;
-        LOCAL_TIMEZONE = datetime.datetime.now(
-            datetime.timezone.utc).astimezone().tzinfo
-        localtime = data_timeUTC.tz_convert(LOCAL_TIMEZONE)
+        sensorid = sensorid_dic[sensor_id];
+        if direction == 'All-Axes':
+            data_frame = clientInflux.QueryData(_bucket= '"system"', _starttime = '-60s', _measurement='"measurement1"',
+                                                _sensorid = sensorid, _direction = '', _fieldkey = '"acceleration"')
+            acc_direction = data_frame['direction'].unique(); acc_direction.sort();
+            name_list = ['X-Axis', 'Y-Axis', 'Z-Axis']
+            for i in range(len(acc_direction)):
+                acc_direction_i = acc_direction[i];
+                acc_i = data_frame[data_frame.direction == acc_direction_i]
+                acc_i = acc_i['_value']
+                data_timeUTC = acc_i.index;
+                LOCAL_TIMEZONE = datetime.datetime.now(
+                        datetime.timezone.utc).astimezone().tzinfo
+                localtime = data_timeUTC.tz_convert(LOCAL_TIMEZONE)
+                acc_i = acc_i.tolist();
+                acc_i = [float (j) for j in acc_i]
+                num_data = len(localtime);
+                # add trace (the sensor data) to the figure
+                fig.add_trace(plotly.graph_objs.Scatter(
+                        x = localtime,
+                        y = acc_i,
+                        name = name_list[i],
+                        hovertemplate='Time: %{x}' + '<br>%{text}: %{y} </br><extra></extra>',
+                        text = ['{}'.format(t) for t in [name_list[i]] * num_data ],
 
-        # add trace (the sensor data) to the figure
-        fig.add_trace(plotly.graph_objs.Scatter(
-            x=list(localtime),
-            y=list(data_temp),
-            name='Scatter',
-            mode='lines+markers'))
+                        mode='lines+markers'))
+        else:    
+            dirc = direction_dic[direction];
+            data_frame = clientInflux.QueryData(_bucket= '"system"', _starttime = '-60s', _measurement='"measurement1"',
+                                                _sensorid = sensorid, _direction = '', _fieldkey = '"acceleration"')
+            acc_direction = data_frame['direction'].unique(); acc_direction.sort();
+            acc = data_frame[data_frame.direction == str(dirc)]          
+            acc = acc['_value']           
+            data_timeUTC = acc.index;
+            LOCAL_TIMEZONE = datetime.datetime.now(
+                        datetime.timezone.utc).astimezone().tzinfo
+            localtime = data_timeUTC.tz_convert(LOCAL_TIMEZONE)
+            acc = acc.tolist();
+            acc = [float (k) for k in acc]
+            num_data = len(localtime);
+            # add trace (the sensor data) to the figure
+            fig.add_trace(plotly.graph_objs.Scatter(
+                    x = localtime,
+                    y = acc,
+                    name = dirc,
+                    hovertemplate='Time: %{x}' + '<br>%{text}: %{y} </br><extra></extra>',
+                    text = ['{}'.format(t) for t in [dirc] * num_data ],
+                    
+                    mode='lines+markers'))
+
         fig.update_layout(margin=dict(l=10,r=10,b=10,t=10,pad=4),
-                            width=900, height = 250)
+                            width=900, height = 250,
+                            xaxis_title = 'Monitoring Time', yaxis_title='Acceleration')
+
         return fig, {'display':'block','position': 'absolute', 'top': '200px','left':'30px'}
     else:
         return [], {'display':'none','position': 'absolute', 'top': '200px','left':'70px'}
@@ -575,22 +636,32 @@ def history_graph(StartDate, StartHrs, StartMin, StopHrs, StopMin, StopDate, sub
         data_temp = data_frame['_value']
         data_temp_str = data_temp.str.extract('(.\d+\,\s+)(.\d+\,\s+)(.\d+\,\s+)(.\d+\,\s+)(.\d+\,\s+)(.\d+\s+)');
         data_temp_val = data_temp_str[2].str.extract('(.\d+)')
-        data_temp_val = data_temp_val[0];
-        data_timeUTC = data_frame.index;
+        data_timeUTC  = data_frame.index;
         # Time zone of UTC+4: Asia/Baku
         localtime = data_timeUTC.tz_convert(pytz.timezone('Asia/Baku'))
-
+        # Data postprocessing
+        data_temp_val = data_temp_val.astype(float)
+        data_list = data_temp_val.values.tolist();
+        data_list = sum(data_list, [])
         fig = plotly.graph_objs.Figure();
         fig.add_trace(plotly.graph_objs.Scatter(
-            x=list(localtime),
-            y=list(data_temp_val),
-            name='Scatter',
-            mode='lines+markers'))
-
+                        line_color = 'rgb(0,0,0)',
+                        x=list(localtime),
+                        y=list(data_list ),
+                        hovertemplate='Time: %{x}' + '<br>Voltage: %{y}<br><extra></extra>',
+                        mode='lines+markers'))
         fig.update_layout(margin=dict(l=10,r=10,b=10,t=10,pad=4),
-                            width=1040, height = 330)
-        return fig, {'display':"block","position":"relative","top":"20px","left":"10px"};
+                            width=1020, height = 330, xaxis_title = 'Monitoring Time', yaxis_title='Acceleration',
+                            plot_bgcolor = 'rgb(255,255,255)')
 
+        fig.update_xaxes(showline = True, linewidth = 2, linecolor = 'black', gridcolor = 'rgb(208,211,212)',
+                            title_font = dict(size = 25, family = 'Times New Roman', color = 'rgb(0,0,0)'),
+                            title_standoff = 5, tickfont=dict(family='Times New Roman', color='#d71440', size=16))
+        fig.update_yaxes(showline = True, linewidth = 2, linecolor = 'black', gridcolor = 'rgb(208,211,212)',
+                            title_font = dict(size = 25, family = 'Times New Roman', color = 'rgb(0,0,0)'),
+                            title_standoff = 25, tickfont=dict(family='Times New Roman', color='#d71440', size=16))
+        
+        return fig, {'display':"block","position":"relative","top":"20px","left":"20px"};
 
 # ============================================================================================
 
