@@ -9,7 +9,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 # Line 10 import the library of MQTT 
 import paho.mqtt.client as mqtt
 import json
-
+from datetime import datetime
 import random
 from time import sleep
 import urllib3
@@ -20,6 +20,7 @@ urllib3.disable_warnings()
 # Parameters: (1) Token: to access to the cloud database; 
 #				(2) org: The email address for creating the cloud database in InfluxDB
 #				(3) url: The url location of the cloud database we use
+'''
 token = os.environ.get("-aTVy9tCmoP8tcZzQnT8oHp2ws_QtgmouEUmwIHgIG20-iAVPHsEC1cI5-2NvZXBKfdI4WndyZg9F39r2JnzdA==")
 org = "ntusyswell@gmail.com"
 url = "https://ap-southeast-2-1.aws.cloud2.influxdata.com"
@@ -30,17 +31,16 @@ client = influxdb_client.InfluxDBClient(url=url, token="-aTVy9tCmoP8tcZzQnT8oHp2
 bucket="system"
 # Line 30: The API to store data to the cloud database
 write_api = client.write_api(write_options=SYNCHRONOUS)
-
+'''
 # ---------------------
 # =======  MQTT =======
 # ---------------------
 
-
-def on_connect1(client, userdata, flags, rc):
+def on_connect(client, userdata, flags, rc):
     """ The callback for when the client connects to the broker."""
-    print("Connected with result code " + str(rc) + ' by' + str(mqttc._client_id))
+    print("Connected with result code " + str(rc) + ' by' + str(client._client_id))
 
-def on_message1(client, userdata, msg):
+def on_message(client, userdata, msg):
     """ The callback for when a PUBLISH message is received from the server."""
     print(msg.topic+" "+str(msg.payload))
 	# Line 50-58: Store the data to the cloud database, and now they are commented for convenience.
@@ -55,32 +55,36 @@ def on_message1(client, userdata, msg):
     write_api.write(bucket=bucket, org="ntusyswell@gmail.com", record=point)
     '''
 
-def on_publish1(client, userdata, mid):
+def on_publish(client, userdata, mid):
     pass
     # print('The message has been published')
 
 # MQTT broker config
-MQTT_BROKER_URL = "test.mosquitto.org"		# The URL of MQTT broker we will use (This is a cloud MQTT broker)
+MQTT_BROKER_URL = "mqtt.eclipseprojects.io"		# The URL of MQTT broker we will use (This is a cloud MQTT broker)
 MQTT_PUBLISH_TOPIC = "acceleration/sensor1"			# The 'Topic' for publishing the data (sensor data)
 
 # MQTT logic - Register callbacks and start MQTT client
-mqttc = mqtt.Client(client_id='1');		# Create an MQTT object 'mqttc' 
+mqttc = mqtt.Client(client_id='847646373');		# Create an MQTT object 'mqttc' 
 # Assign the above three callback functions to the 'mqttc client'
-mqttc.on_connect = on_connect1; mqttc.on_message = on_message1
-mqttc.on_publish = on_publish1
+mqttc.on_connect = on_connect; mqttc.on_message = on_message
+mqttc.on_publish = on_publish
 
-mqttc.connect(MQTT_BROKER_URL)	# Connect to the MQTT broker
+mqttc.connect(MQTT_BROKER_URL, port=1883)	# Connect to the MQTT broker
 mqttc.loop_start()				# Start a loop for mqtt
-sleep(1)
 
+k = 0; 
 while True:
     # Create acceleration in the x, y and z directions
     acc_x = random.uniform(-10,35);	
-    acc_y = random.uniform(-10,35);	
+    acc_y = random.uniform(135,170);	
     acc_z = random.uniform(-10,35);	
-    print(f"Published new acceleration/sensor1 measurement: {acc_x, acc_y, acc_z}")
-    sleep(1)
-    acc_msg = json.dumps({'acc_x':str(acc_x), 'acc_y':str(acc_y), 'acc_z':str(acc_z)})
+    time_stamp = time.time();
+    print(f"Published new acceleration/sensor1 measurement: {acc_x, acc_y, acc_z, time_stamp}")
+    sleep(0.05)
+    acc_msg = json.dumps({'acc_x':str(acc_x), 'acc_y':str(acc_y), 'acc_z':str(acc_z), 
+                          'time': time_stamp})
 	# Publish the random temperature 'rantemp' with specific topic 'MQTT_PUBLISH_TOPIC'
     mqttc.publish(topic = MQTT_PUBLISH_TOPIC, payload = acc_msg)
-    
+
+
+sleep(1)

@@ -31,12 +31,9 @@ bucket="system"
 # Line 30: The API to store data to the cloud database
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-
-
 # ---------------------
 # =======  MQTT =======
 # ---------------------
-
 
 def on_connect(client, userdata, flags, rc):
     """ The callback for when the client connects to the broker."""
