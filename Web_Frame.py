@@ -4,6 +4,7 @@ from matplotlib.pyplot import figure, margins
 import pytz
 import datetime
 from datetime import date
+from datetime import datetime as datetimesub
 import plotly.graph_objs as go
 import plotly
 import plotly.express as plex
@@ -22,6 +23,8 @@ from panel import state
 import pymysql as mysql
 import pandas as pd
 import urllib3
+import numpy as np
+from time import sleep
 urllib3.disable_warnings()
 
 # ==================================== MySQL Start ============================================
@@ -31,7 +34,7 @@ urllib3.disable_warnings()
 
 class CreateSensorDB(object):
     # def __init__(self, _host="localhost", _user="root", _password='shenwei66719126', _DBname='TestBed'):
-    def __init__(self, _host="ntutestbed.cidlvgyuihjt.ap-southeast-1.rds.amazonaws.com",
+    def __init__(self, _host="ntu-testbed.cidlvgyuihjt.ap-southeast-1.rds.amazonaws.com",
                     _user = 'admin', _password = 'ntutestbed2022', _DBname = 'testbed'):
         self.database = mysql.connect(
             host=_host, user=_user, password=_password, database=_DBname)
@@ -132,7 +135,9 @@ Xnode_Info = ((1, 'Floor-1', 'worked', str((1, 2, 3))),
                 (8, 'Floor-3', 'worked', str((7, 8, 9))),
                 (9, 'Floor-3', 'worked', str((7, 8, 9))));
 
-FieldKey_Xnode = ('SensorID', 'Floor', 'Status', 'Location')
+FieldKey_Xnode = ('SensorID', 'Floor', 'Status', 'Location');
+
+'''
 sensorDB.InsertData(TableName='Xnode_Sensor',
                     FieldKey=FieldKey_Xnode, Data=Xnode_Info)
 # sensor general info --> FBG sensor
@@ -143,21 +148,27 @@ FBG_Info = ((1, 'Floor-1', 'worked', str((1, 2, 3))),
 FieldKey_FBG = ('SensorID', 'Floor', 'Status', 'Location')
 sensorDB.InsertData(TableName='FBG_Sensor',
                     FieldKey=FieldKey_FBG, Data=FBG_Info)
-
+'''
 # ====================================== MySQL end ============================================
 
 # ====================================== Influx start =========================================
 class CreateSensorInflux(object):
+    '''
     def __init__(self, _url="https://ap-southeast-2-1.aws.cloud2.influxdata.com",
                 _token="-aTVy9tCmoP8tcZzQnT8oHp2ws_QtgmouEUmwIHgIG20-iAVPHsEC1cI5-2NvZXBKfdI4WndyZg9F39r2JnzdA==",
                 _org="ntusyswell@gmail.com"):
+
+    '''
+    def __init__(self, _url="https://ap-southeast-2-1.aws.cloud2.influxdata.com",
+                _token="BUHBJvtOwVYIFy4HZLRdufBLtQ3Gijjtv4pnunqqEi-lxztp2RpbMs1dw2IqQQ4mNRrDU4RAnq0sqS4FxIVDGg==",
+                _org="sunwellup@gmail.com"):
         self.influxDB = InfluxDBClient(url=_url, token=_token, org=_org, verify_ssl=False)
         self.bucket = self.influxDB.buckets_api()
         self.write = self.influxDB.write_api();
         self.query = self.influxDB.query_api()
 
     def QueryData(self, _bucket: str, _starttime: str, _measurement: str, _fieldkey: str, _sensorid: str,
-                    _direction:str,_stoptime='now()', data_index='_time', _org="ntusyswell@gmail.com"):
+                    _direction:str,_stoptime='now()', data_index='_time', _org="sunwellup@gmail.com"):
         '''
         Param: _bucket --> the name of the bucket
         Param: _starttime --> the time to be requested from
@@ -185,6 +196,22 @@ class CreateSensorInflux(object):
 # ====================================== Influx end ===========================================
 
 
+# ====================================== MQTT Subscriber ======================================
+import json
+import influxdb_client, os, time
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+# Line 10 import the library of MQTT 
+import paho.mqtt.client as mqtt
+
+# MQTT logic - Register callbacks and start MQTT client
+mqtt_realtime =  mqtt.Client(client_id='28237478322472');		# Create an MQTT object 'mqttc' 
+
+
+# ====================================== MQTT End ==============================================
+
+
+
 # =================================== Flask and dash ===========================================
 # Create a APP object using FLASK
 template_path = os.getcwd() + '\\templates';
@@ -201,7 +228,7 @@ def home():
 
 @_server.route("/Home")
 def Home():
-    return render_template('Web_layout.html')
+    return render_template('home.html')
 # Set the link to the four buttons of navigator
 
 
@@ -276,7 +303,10 @@ dashsystem_layout = '''
 assets_path = os.getcwd() + "\\static"
 appdash_system = dash.Dash(__name__, server=_server, url_base_pathname='/System/',
                             index_string=dashsystem_layout, assets_folder=assets_path)
-
+'''
+appdash_about = dash.Dash(__name__, server=_server, url_base_pathname='/About/',
+                            index_string=dashsystem_layout, assets_folder=assets_path)
+'''
 clientInflux = CreateSensorInflux()
 
 # Use two tabs to display: (1) real-time monitoring; (2) History monitoring
@@ -444,6 +474,7 @@ def sensor_ID(floor, sensor_type):
         return id_opt, False, {}, Direction_Option , False, {}
 
 
+
 @appdash_system.callback(Output(component_id='static-info', component_property='children'),
                             State(component_id='No-Floor', component_property='value'),
                             State(component_id='Sensor-Type', component_property='value'),
@@ -520,8 +551,50 @@ def Sensor_Info(floor, sensor_type, sensor_id, submit_clicks, clear_click):
     elif button_clicked == 'realtime-clear':
         return []
 
-sensorid_dic = {'Xnode1':'"sensor1"', 'Xnode2':'"sensor2"'};
+# Sensor ID
+sensorid_dic = {'Xnode1':'sensor1', 'Xnode2':'sensor2'};
 direction_dic = {'X-Axis': 'x', 'Y-Axis':'y', 'Z-Axis':'z'};
+
+# Set a global variable to store the real-time data
+store_size = 10;
+realdata = np.zeros((store_size,3)); 
+data_time = [None] * store_size;
+MQTT_BROKER_URL = "mqtt.eclipseprojects.io"		# The URL of MQTT broker we will use (This is a cloud MQTT broker)
+
+# Define the callback function for <mqtt_realtime>
+def _on_connect(client, userdata, flags, rc):
+    """ The callback for when the client connects to the broker."""
+    print("Connected with result code " + str(rc) + ' by' + str(mqtt_realtime._client_id))
+
+def _on_disconnect(client, userdata, rc):
+    print("disconnected with result code " + str(rc))
+
+def _on_subscribe(client, userdata, mid, granted_qos):
+    print('The subscribed topic is')
+
+def _on_message(client, userdata, msg):
+    """ The callback for when one PUBLISH message is received from the server."""
+    topic_str = str(msg.topic);
+    _field, _sensor_id = topic_str.split('/');
+    global realdata, data_time
+    # Convert the payload form JSON into python format
+    py_payload = json.loads(msg.payload)
+    timestamp = py_payload['time']; timestamp = float(timestamp);
+    datatime = datetimesub.fromtimestamp(timestamp);
+    # Update the data
+    realdata = np.roll(realdata, -1, axis=0); 
+    realdata[-1, 0] = py_payload['acc_x']; 
+    realdata[-1, 1] = py_payload['acc_y'];
+    realdata[-1, 2] = py_payload['acc_z'];
+    # Update the time
+    data_time = np.roll(data_time, -1);
+    data_time[-1] = datatime;
+    print(realdata)
+
+mqtt_realtime.on_message = _on_message;
+mqtt_realtime.on_connect = _on_connect;
+mqtt_realtime.on_disconnect = _on_disconnect;
+mqtt_realtime.on_subscribe = _on_subscribe;
 
 # Give an output for the X, Y and Z accelermeter sensor only or all the three directions
 @appdash_system.callback(Output(component_id='realtime-graph', component_property='figure'),
@@ -530,16 +603,37 @@ direction_dic = {'X-Axis': 'x', 'Y-Axis':'y', 'Z-Axis':'z'};
                             State(component_id='Sensor-Type', component_property='value'),
                             State(component_id='Sensor-ID', component_property='value'),
                             State(component_id='Direction', component_property='value'),
-
                             Input(component_id='graph-update', component_property='n_intervals'),
                             Input(component_id='submit-button-realtime', component_property='n_clicks'),
                             Input(component_id='static-info', component_property='children'))
+
 def realtime_graph(floor, sensor_type, sensor_id, direction, n_intervals,n_click, static_info):
+    global realdata, data_time
     if static_info:
+        # mqtt_realtime.connect(MQTT_BROKER_URL, port=1883)	
         # ================= Fetch the data from the influxDB ==========================
         fig = plotly.graph_objs.Figure();
         sensorid = sensorid_dic[sensor_id];
+        # Set the callback function, connect to the MQTT broker				
+        # The sensor id indicates the topic for the MQTT broker, then subscribe
+        MQTT_PUBLISH_TOPIC = "acceleration/" + sensorid  		# The 'Topic' for publishing the data (sensor data)
+        # print(MQTT_PUBLISH_TOPIC)
+        mqtt_realtime.subscribe(topic = MQTT_PUBLISH_TOPIC)		# Subscribe the topic
+        # Loop start;
+        mqtt_realtime.loop_start(); 
         if direction == 'All-Axes':
+            print(2)
+            name_list = ['X-Axis', 'Y-Axis', 'Z-Axis']
+            # add trace (the sensor data) to the figure
+            fig.add_trace(plotly.graph_objs.Scatter(
+                    x = list(data_time),
+                    y = list(realdata[:,1]),
+                    # name = name_list,
+                    hovertemplate='Time: %{x}' + '<br>%{text}: %{y} </br><extra></extra>',
+                    # text = ['{}'.format(t) for t in [name_list[i]] * num_data ],
+                    mode='lines+markers'))
+
+            '''
             data_frame = clientInflux.QueryData(_bucket= '"system"', _starttime = '-60s', _measurement='"measurement1"',
                                                 _sensorid = sensorid, _direction = '', _fieldkey = '"acceleration"')
             acc_direction = data_frame['direction'].unique(); acc_direction.sort();
@@ -562,8 +656,9 @@ def realtime_graph(floor, sensor_type, sensor_id, direction, n_intervals,n_click
                         name = name_list[i],
                         hovertemplate='Time: %{x}' + '<br>%{text}: %{y} </br><extra></extra>',
                         text = ['{}'.format(t) for t in [name_list[i]] * num_data ],
-
                         mode='lines+markers'))
+            '''
+            # Loop stop and disconnect;
         else:    
             dirc = direction_dic[direction];
             data_frame = clientInflux.QueryData(_bucket= '"system"', _starttime = '-60s', _measurement='"measurement1"',
@@ -591,10 +686,14 @@ def realtime_graph(floor, sensor_type, sensor_id, direction, n_intervals,n_click
         fig.update_layout(margin=dict(l=10,r=10,b=10,t=10,pad=4),
                             width=900, height = 250,
                             xaxis_title = 'Monitoring Time', yaxis_title='Acceleration')
-
+        mqtt_realtime.loop_stop();
+        mqtt_realtime.disconnect();
         return fig, {'display':'block','position': 'absolute', 'top': '200px','left':'30px'}
     else:
+        mqtt_realtime.loop_stop();
+        mqtt_realtime.disconnect();
         return [], {'display':'none','position': 'absolute', 'top': '200px','left':'70px'}
+
 
 
 @appdash_system.callback(Output(component_id='history-graph', component_property='figure'),
@@ -668,7 +767,11 @@ def history_graph(StartDate, StartHrs, StartMin, StopHrs, StopMin, StopDate, sub
 @_server.route('/System/')
 def system():
     return appdash_system
-
+'''
+@_server.route('/About/')
+def about():
+    return appdash_about
+'''
 # ===================================================================================
 
 
