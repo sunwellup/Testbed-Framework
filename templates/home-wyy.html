@@ -1,0 +1,204 @@
+<html>
+<head>
+<style>
+body {
+  font-family: Arial;
+  margin: 10;
+}
+
+/* Hide the images by default */
+.mySlides {
+  display: none;
+}
+
+.container {
+    margin-top: 2%;
+}
+
+/* Add a pointer when hovering over the thumbnail images */
+.cursor {
+  cursor: pointer;
+}
+
+/* Next & previous buttons */
+.prev,
+.next {
+  cursor: pointer;
+  position:absolute;
+  top: 80%;
+  right: 96.8%;
+  width: auto;
+  padding: 10px;
+  margin-top: -50px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  border-radius: 0 10px 10px 0;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Position the "next button" to the right */
+.next {
+  top:80%;
+  right: 49.2%;
+  border-radius: 10px 0 0 10px;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.prev:hover,
+.next:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Number text (1/3 etc) */
+.numbertext {
+  color: #f2f2f2;
+  font-size: 12px;
+  padding: 8px 12px;
+  position: absolute;
+  top: 37%;
+}
+
+.button {
+  display: inline-block;
+  padding: 15px 25px;
+  font-size: 22px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration:solid;
+  outline:invert;
+  color: #fff;
+  background-color: #4CAF50;
+  border:#666;
+  border-radius: 5px;
+  box-shadow: 0 5px #999;
+}
+
+.button1 {border-radius: 12px;}
+.button2 {border-radius: 12px;}
+.button3 {border-radius: 12px;}
+.button4 {border-radius: 12px;}
+
+.button:hover {background-color: #3e8e41}
+
+.button:active {
+  background-color: #3e8e41;
+  box-shadow: 0 5px #666;
+  transform: translateY(7px);
+}
+
+</style>
+</head>
+<body>  
+     
+<h1><img src="static/icon.jpg" >
+  
+    Digital Construction - NTU | Welcome | Welcome</h1>
+    
+
+<a href= "home.html" class="button button1">HOME</a>
+<a href= "aboutpg.html" class="button button2">ABOUT</a>
+<a href= "/Home" class="button button3">SYSTEM</a>
+<a href= "loginpg.html" class="button button4">LOGIN</a>
+
+  <div class="container" >
+    <div class="mySlides">
+      <div class="numbertext">1 / 5</div>
+      <img src="static/civil.jpg" style="width:632px; height: 400px;float:left;">
+      <p style="font-family:sans-serif;font-size: 30px; text-align: center; text-shadow: 1px #666;
+      line-height: 2;">
+        Our research invloves using smart sensing <br>techniques, 
+        like wireless smart sensors (WSS) and big data management, 
+        which is capable of sending the data from site more reliable 
+        and processing huge observation data on cloud server. </p>
+    </div>
+  
+    <div class="mySlides">
+      <div class="numbertext">2 / 5</div>
+      <img src="static/database-1954920_1280.jpg" style="width:632px; height: 400px;float:left;">
+      <p style="font-family:sans-serif;font-size: 30px; text-align: center; text-shadow: 1px #666;
+      line-height: 2;">
+        Our research invloves using smart sensing <br>techniques, 
+        like wireless smart sensors (WSS) and big data management, 
+        which is capable of sending the data from site more reliable 
+        and processing huge observation data on cloud server. </p>
+    </div>
+  
+    <div class="mySlides">
+      <div class="numbertext">3 / 5</div>
+      <img src="static/mqtt" style="width:632px; height: 400px;float:left;">
+      <p style="font-family:sans-serif;font-size: 30px; text-align: center; text-shadow: 1px #666;
+      line-height: 2;">
+        Our research invloves using smart sensing <br>techniques, 
+        like wireless smart sensors (WSS) and big data management, 
+        which is capable of sending the data from site more reliable 
+        and processing huge observation data on cloud server. </p>
+    </div>
+      
+    <div class="mySlides">
+      <div class="numbertext">4 / 5</div>
+      <img src="static/home2" style="width:632px; height: 400px;float:left;">
+      <p style="font-family:sans-serif;font-size: 30px; text-align: center; text-shadow: 1px #666;
+      line-height: 2;">
+        Our research invloves using smart sensing <br>techniques, 
+        like wireless smart sensors (WSS) and big data management, 
+        which is capable of sending the data from site more reliable 
+        and processing huge observation data on cloud server. </p>
+    </div>
+
+    <div class="mySlides">
+        <div class="numbertext">5/ 5</div>
+        <img src="static/code.jpg" style="width:632px; height: 400px;float:left;">
+        <p style="font-family:sans-serif;font-size: 30px; text-align: center; text-shadow: 1px #666;
+      line-height: 2;">
+        Our research invloves using smart sensing <br>techniques, 
+        like wireless smart sensors (WSS) and big data management, 
+        which is capable of sending the data from site more reliable 
+        and processing huge observation data on cloud server. </p>
+
+  </div>
+  
+      
+    <a class="prev" onclick="plusSlides(-1)">❮</a>
+    <a class="next" onclick="plusSlides(1)">❯</a>
+  
+  
+    </div>
+  </div>
+  
+  <script>
+  let slideIndex = 1;
+  showSlides(slideIndex);
+  
+  function plusSlides(n) {
+    showSlides(slideIndex += n);
+  }
+  
+  function currentSlide(n) {
+    showSlides(slideIndex = n);
+  }
+  
+  function showSlides(n) {
+    let i;
+    let slides = document.getElementsByClassName("mySlides");
+    let dots = document.getElementsByClassName("demo");
+    let captionText = document.getElementById("caption");
+    if (n > slides.length) {slideIndex = 1}
+    if (n < 1) {slideIndex = slides.length}
+    for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+    }
+    for (i = 0; i < dots.length; i++) {
+      dots[i].className = dots[i].className.replace(" active", "");
+    }
+    slides[slideIndex-1].style.display = "block";
+    dots[slideIndex-1].className += " active";
+    captionText.innerHTML = dots[slideIndex-1].alt;
+  }
+  </script>
+      
+
+</body>
+</html>

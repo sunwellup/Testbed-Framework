@@ -7,19 +7,56 @@
         <meta http-equiv="x-ua-compatible" content="ie=edge">       <!-- X-UA-Compatible render for edge -->
         <link rel="stylesheet" type="text/css" href="../static/Web_application.css" />
         <title> Digital Construction - NTU | Welcome | Welcome </title>
+        <style>
+        .box1 {
+            background-color: lightgrey;
+            width: 1150px;
+            height: 300px;
+            border: 15px solid #181c62;
+            padding: 15px;
+            margin: 10px;
+            text-indent: 8px;
+            margin-left: auto;
+            margin-right: auto;
+            }
+        
+        .box2 {
+            background-color: lightgrey;
+            width: 1150px;
+            height: 300px;
+            border: 15px solid #181c62;
+            padding: 15px;
+            margin: 10px;
+            margin-left: auto;
+            margin-right: auto;
+            text-indent: 8px;
+            }
+        
+        .box3 {
+            background-color: lightgrey;
+            width: 1150px;
+            height: 300px;
+            border: 15px solid #181c62;
+            padding: 15px;
+            margin: 10px;
+            text-indent: 8px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        </style>
     </head>
 
     <body>
         <div class="navigation-bar">
             <img src="../static/ntu-placeholder-d.png" style="width: 300px; height: auto;
-            position: relative; top: 20px; right: 980px;">
+            position: relative; top: 20px; right: 720px;">
 
             <h1 style="color: #f4f4f4; font-size: 46px; position: relative; left:340px; bottom: 0px;
                 margin: 0px;padding: 0px;float: left;"> 
-                    Digital Construction and Intelligent Infrastructure </h1>
+                    NTU Testbed for Digital Construction </h1>
             <h3 style="width:700px; position: relative; bottom: 73px; left:340px;color: #d71440; font-size: 27px;">
                 <i>Making built environment sustainable & resilient</i></h3>
-        
+
             <ul style="position: relative; bottom: 50px">
                 <li style="position: absolute; bottom: 12px; left:900px;">
                     <a href= "/Home">Home</a>    </li>
@@ -30,8 +67,41 @@
                 <li style="position: absolute; bottom: 12px; left:1230px;">
                     <a href= "/Login">Login</a>   </li>
         </ul>
-
-
         </div>
+
+        <div class="box1">
+            <img src="static/WSN" style="width:432px; height: 300px;float:right;">
+            <h1 style="text-decoration:underline; text-align: initial; font-style: italic;">Wireless sensing system</h1>
+            <p style="text-indent:0px; font-size: 20px;">SHM systems were built with wired sensor networks, but the great reliability and 
+                low installation and maintenance costs of WSNs have made them a promising alternative platform.
+                The huge cost savings from deploying WSNs for SHM would allow them to be used in critical public 
+                and private infrastructure, increasing the adoption of applications 
+                such as short-term structural monitoring. Such systems increase the lifespan of many facilities 
+                by detecting problems early, reduce the cost of routine inspections, and, most importantly, 
+                improve public safety.</p></div>
+        
+        <div class="box2">
+            <img src="static/Rpi.jpg" style="width:432px; height: 300px;float:left;">
+            <h1 style="text-decoration:underline; text-align: initial; font-style: italic;text-align: right;">Raspberry pi</h1>
+            <p style="text-indent:0px; font-size: 20px;text-align: right;">The raspberry pi does the necessary computations to determine the SHM status, 
+                including determining the position and extent of any damage. 
+                The Raspberry Pi serves as a hub for data collection from several NRF transceivers positioned 
+                throughout the building. Using a Wi-Fi module, the Raspberry Pi will transfer the data to the cloud.
+                The data will be saved in the cloud and accessible from any mobile device. 
+                The technology has been validated in the lab using a real test bed.</p></div>
+        </div>
+        
+        <div class="box3">
+            <img src="static/cloud.jpg" style="width:432px; height: 300px;float:right;">
+            <h1 style="text-decoration:underline; text-align: initial; font-style: italic;">Cloud database</h1>
+            <p style="text-indent:0px; font-size: 20px;">Acceleration at a sampling rate of 100-500 Hz is the principal data source for SHM. 
+                This sample rate generates significant amounts of data, especially when numerous sensors 
+                are recorded on a structure. 
+                A cloud-SHM data sharing website was created to enable data synchronisation between smartphone 
+                and website, as well as data uploading and sharing, which can improve monitoring and 
+                big data integration efficiency, as well as the possibility of big data collection and 
+                quick structural safety evaluation.</p></div>
+        </div>        
+
     </body>
 </html>
